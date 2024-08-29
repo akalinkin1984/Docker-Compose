@@ -1,6 +1,6 @@
 version: "3.9"
 services:
-  my_postgres:
+  my_pg:
     image: postgres:latest
     environment:
       POSTGRES_DB: "my_db"
@@ -11,12 +11,12 @@ services:
     ports:
       - "5432:5432"
 
-  backend:
+  dj_app:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - my_postgres
+      - my_pg
     restart: always
     volumes:
       - ./stocks_products:/app
@@ -24,9 +24,9 @@ services:
       - ./config/_env
     networks:
       - data
-      - back
+      - backend
     expose:
-     - 8080
+      - 8080
 
   nginx:
     image: nginx:latest
@@ -34,13 +34,14 @@ services:
       - ./config/nginx.conf:/etc/nginx/nginx.conf
       - ./config/default.conf:/etc/nginx/conf.d/default.conf
       - ./stocks_products:/app
+      - ./config/proxy_params.conf:/etc/nginx/proxy_params
     depends_on:
-      - backend
+      - dj_app
     networks:
-      - back
+      - backend
     ports:
       - 80:80
 
 networks:
   data:
-  back:
+  backend:
